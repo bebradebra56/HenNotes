@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/hen_notes_graph"
+    app:startDestination="@id/henNotesLoadFragment">
+
+    <fragment
+        android:id="@+id/henNotesLoadFragment"
+        android:name="com.hensof.noteplay.frepos.presentation.ui.load.HenNotesLoadFragment"
+        android:label="HenNotesLoadFragment" >
+        <action
+            android:id="@+id/action_henNotesLoadFragment_to_henNotesV"
+            app:destination="@id/henNotesV"
+            app:popUpTo="@id/hen_notes_graph"
+            app:popUpToInclusive="true" />
+    </fragment>
+    <fragment
+        android:id="@+id/henNotesV"
+        android:name="com.hensof.noteplay.frepos.presentation.ui.view.HenNotesV"
+        android:label="HenNotesV" />
+</navigation>

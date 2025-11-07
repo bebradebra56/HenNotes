@@ -1,0 +1,40 @@
+<resources>
+    <string name="app_name">Hen Notes</string>
+    <string name="app_description">Your farm diary companion</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_notes">Notes</string>
+    <string name="nav_categories">Categories</string>
+    <string name="nav_statistics">Statistics</string>
+    <string name="nav_settings">Settings</string>
+
+    <!-- Categories -->
+    <string name="category_egg_production">Egg Production</string>
+    <string name="category_feed_nutrition">Feed &amp; Nutrition</string>
+    <string name="category_health">Health</string>
+    <string name="category_finance">Finance</string>
+    <string name="category_free_notes">Free Notes</string>
+
+    <!-- Actions -->
+    <string name="action_add">Add</string>
+    <string name="action_save">Save</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_edit">Edit</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_search">Search</string>
+    <string name="action_filter">Filter</string>
+
+    <!-- Labels -->
+    <string name="label_title">Title</string>
+    <string name="label_content">Content</string>
+    <string name="label_category">Category</string>
+    <string name="label_tags">Tags</string>
+    <string name="label_photos">Photos</string>
+
+    <!-- Messages -->
+    <string name="msg_no_notes">No notes yet</string>
+    <string name="msg_create_first_note">Tap + to create your first note</string>
+    <string name="msg_note_saved">Note saved successfully</string>
+    <string name="msg_note_deleted">Note deleted</string>
+</resources>
