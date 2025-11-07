@@ -6,6 +6,9 @@ import android.view.WindowManager
 import com.appsflyer.AppsFlyerConversionListener
 import com.appsflyer.AppsFlyerLib
 import com.appsflyer.attribution.AppsFlyerRequestListener
+import com.appsflyer.deeplink.DeepLink
+import com.appsflyer.deeplink.DeepLinkListener
+import com.appsflyer.deeplink.DeepLinkResult
 import com.hensof.noteplay.frepos.presentation.di.henNotesModule
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -48,6 +51,7 @@ private const val HEN_NOTES_LIN = "com.hensof.noteplay"
 class HenNotesApplication : Application() {
     private var henNotesIsResumed = false
     private var henNotesConversionTimeoutJob: Job? = null
+    private var henNotesDeepLinkData: MutableMap<String, Any>? = null
     override fun onCreate() {
         super.onCreate()
 
@@ -55,7 +59,26 @@ class HenNotesApplication : Application() {
         henNotesSetDebufLogger(appsflyer)
         henNotesMinTimeBetween(appsflyer)
 
+        AppsFlyerLib.getInstance().subscribeForDeepLink(object : DeepLinkListener {
+            override fun onDeepLinking(p0: DeepLinkResult) {
+                when (p0.status) {
+                    DeepLinkResult.Status.FOUND -> {
+                        henNotesExtractDeepMap(p0.deepLink)
+                        Log.d(HEN_NOTES_MAIN_TAG, "onDeepLinking found: ${p0.deepLink}")
 
+                    }
+
+                    DeepLinkResult.Status.NOT_FOUND -> {
+                        Log.d(HEN_NOTES_MAIN_TAG, "onDeepLinking not found: ${p0.deepLink}")
+                    }
+
+                    DeepLinkResult.Status.ERROR -> {
+                        Log.d(HEN_NOTES_MAIN_TAG, "onDeepLinking error: ${p0.error}")
+                    }
+                }
+            }
+
+        })
         appsflyer.init(
             HEN_NOTES_APP_DEV,
             object : AppsFlyerConversionListener {
@@ -135,6 +158,33 @@ class HenNotesApplication : Application() {
         }
     }
 
+    private fun henNotesExtractDeepMap(dl: DeepLink) {
+        val map = mutableMapOf<String, Any>()
+        dl.deepLinkValue?.let { map["deep_link_value"] = it }
+        dl.mediaSource?.let { map["media_source"] = it }
+        dl.campaign?.let { map["campaign"] = it }
+        dl.campaignId?.let { map["campaign_id"] = it }
+        dl.afSub1?.let { map["af_sub1"] = it }
+        dl.afSub2?.let { map["af_sub2"] = it }
+        dl.afSub3?.let { map["af_sub3"] = it }
+        dl.afSub4?.let { map["af_sub4"] = it }
+        dl.afSub5?.let { map["af_sub5"] = it }
+        dl.matchType?.let { map["match_type"] = it }
+        dl.clickHttpReferrer?.let { map["click_http_referrer"] = it }
+        dl.getStringValue("timestamp")?.let { map["timestamp"] = it }
+        dl.isDeferred?.let { map["is_deferred"] = it }
+        for (i in 1..10) {
+            val key = "deep_link_sub$i"
+            dl.getStringValue(key)?.let {
+                if (!map.containsKey(key)) {
+                    map[key] = it
+                }
+            }
+        }
+        Log.d(HEN_NOTES_MAIN_TAG, "Extracted DeepLink data: $map")
+        henNotesDeepLinkData = map
+    }
+
     private fun henNotesStartConversionTimeout() {
         henNotesConversionTimeoutJob = CoroutineScope(Dispatchers.Main).launch {
             delay(30000)
@@ -147,9 +197,26 @@ class HenNotesApplication : Application() {
 
     private fun henNotesResume(state: HenNotesAppsFlyerState) {
         henNotesConversionTimeoutJob?.cancel()
-        if (!henNotesIsResumed) {
-            henNotesIsResumed = true
-            henNotesConversionFlow.value = state
+        if (state is HenNotesAppsFlyerState.HenNotesSuccess) {
+            val convData = state.henNotesData ?: mutableMapOf()
+            val deepData = henNotesDeepLinkData ?: mutableMapOf()
+            val merged = mutableMapOf<String, Any>().apply {
+                putAll(convData)
+                for ((key, value) in deepData) {
+                    if (!containsKey(key)) {
+                        put(key, value)
+                    }
+                }
+            }
+            if (!henNotesIsResumed) {
+                henNotesIsResumed = true
+                henNotesConversionFlow.value = HenNotesAppsFlyerState.HenNotesSuccess(merged)
+            }
+        } else {
+            if (!henNotesIsResumed) {
+                henNotesIsResumed = true
+                henNotesConversionFlow.value = state
+            }
         }
     }
 
