@@ -3,7 +3,7 @@ workflows:
     name: Android release workflow
     environment:
       android_signing:
-        - hatch_plan_keystore
+        - hen_notes_keystore
       vars:
         PACKAGE_NAME: "com.hensof.noteplay"
     scripts:
