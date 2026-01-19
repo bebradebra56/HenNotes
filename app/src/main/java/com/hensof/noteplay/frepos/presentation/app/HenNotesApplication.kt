@@ -50,8 +50,9 @@ private const val HEN_NOTES_APP_DEV = "Lyy5XQBZDPk5kDdogy5TM5"
 private const val HEN_NOTES_LIN = "com.hensof.noteplay"
 class HenNotesApplication : Application() {
     private var henNotesIsResumed = false
-    private var henNotesConversionTimeoutJob: Job? = null
+    //    private var henNotesConversionTimeoutJob: Job? = null
     private var henNotesDeepLinkData: MutableMap<String, Any>? = null
+
     override fun onCreate() {
         super.onCreate()
 
@@ -79,11 +80,13 @@ class HenNotesApplication : Application() {
             }
 
         })
+
+
         appsflyer.init(
             HEN_NOTES_APP_DEV,
             object : AppsFlyerConversionListener {
                 override fun onConversionDataSuccess(p0: MutableMap<String, Any>?) {
-                    henNotesConversionTimeoutJob?.cancel()
+//                    henNotesConversionTimeoutJob?.cancel()
                     Log.d(HEN_NOTES_MAIN_TAG, "onConversionDataSuccess: $p0")
 
                     val afStatus = p0?.get("af_status")?.toString() ?: "null"
@@ -103,10 +106,16 @@ class HenNotesApplication : Application() {
                                 val resp = response.body()
                                 Log.d(HEN_NOTES_MAIN_TAG, "After 5s: $resp")
                                 if (resp?.get("af_status") == "Organic" || resp?.get("af_status") == null) {
-                                    henNotesResume(HenNotesAppsFlyerState.HenNotesError)
+                                    henNotesResume(
+                                        HenNotesAppsFlyerState.HenNotesSuccess(
+                                            p0
+                                        )
+                                    )
                                 } else {
                                     henNotesResume(
-                                        HenNotesAppsFlyerState.HenNotesSuccess(resp)
+                                        HenNotesAppsFlyerState.HenNotesSuccess(
+                                            resp
+                                        )
                                     )
                                 }
                             } catch (d: Exception) {
@@ -120,7 +129,7 @@ class HenNotesApplication : Application() {
                 }
 
                 override fun onConversionDataFail(p0: String?) {
-                    henNotesConversionTimeoutJob?.cancel()
+//                    henNotesConversionTimeoutJob?.cancel()
                     Log.d(HEN_NOTES_MAIN_TAG, "onConversionDataFail: $p0")
                     henNotesResume(HenNotesAppsFlyerState.HenNotesError)
                 }
@@ -146,7 +155,7 @@ class HenNotesApplication : Application() {
                 Log.d(HEN_NOTES_MAIN_TAG, "AppsFlyer start error: $p0 - $p1")
             }
         })
-        henNotesStartConversionTimeout()
+//        henNotesStartConversionTimeout()
         startKoin {
             androidLogger(Level.DEBUG)
             androidContext(this@HenNotesApplication)
@@ -185,18 +194,18 @@ class HenNotesApplication : Application() {
         henNotesDeepLinkData = map
     }
 
-    private fun henNotesStartConversionTimeout() {
-        henNotesConversionTimeoutJob = CoroutineScope(Dispatchers.Main).launch {
-            delay(30000)
-            if (!henNotesIsResumed) {
-                Log.d(HEN_NOTES_MAIN_TAG, "TIMEOUT: No conversion data received in 30s")
-                henNotesResume(HenNotesAppsFlyerState.HenNotesError)
-            }
-        }
-    }
+//    private fun henNotesStartConversionTimeout() {
+//        henNotesConversionTimeoutJob = CoroutineScope(Dispatchers.Main).launch {
+//            delay(30000)
+//            if (!henNotesIsResumed) {
+//                Log.d(PLINK_ZEN_MAIN_TAG, "TIMEOUT: No conversion data received in 30s")
+//                henNotesResume(PlinkZenAppsFlyerState.PlinkZenError)
+//            }
+//        }
+//    }
 
     private fun henNotesResume(state: HenNotesAppsFlyerState) {
-        henNotesConversionTimeoutJob?.cancel()
+//        henNotesConversionTimeoutJob?.cancel()
         if (state is HenNotesAppsFlyerState.HenNotesSuccess) {
             val convData = state.henNotesData ?: mutableMapOf()
             val deepData = henNotesDeepLinkData ?: mutableMapOf()
@@ -210,7 +219,8 @@ class HenNotesApplication : Application() {
             }
             if (!henNotesIsResumed) {
                 henNotesIsResumed = true
-                henNotesConversionFlow.value = HenNotesAppsFlyerState.HenNotesSuccess(merged)
+                henNotesConversionFlow.value =
+                    HenNotesAppsFlyerState.HenNotesSuccess(merged)
             }
         } else {
             if (!henNotesIsResumed) {
@@ -234,7 +244,7 @@ class HenNotesApplication : Application() {
         appsflyer.setMinTimeBetweenSessions(0)
     }
 
-    private fun henNotesGetApi(url: String, client: OkHttpClient?) : HenNotesAppsApi {
+    private fun henNotesGetApi(url: String, client: OkHttpClient?): HenNotesAppsApi {
         val retrofit = Retrofit.Builder()
             .baseUrl(url)
             .client(client ?: OkHttpClient.Builder().build())
